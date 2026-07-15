@@ -6,6 +6,8 @@ import com.xianxia.qunxia.settings.ApiConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * LLM API 客户端 —— 直接与用户配置的 API 交互
@@ -126,8 +128,8 @@ class LlmClient(private val apiConfig: ApiConfig) {
             "response_format" to mapOf("type" to "json_object")
         )
         val json = gson.toJson(jsonObj)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
-        return RequestBody.create(mediaType, json)
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+        return json.toRequestBody(mediaType)
     }
 
     private fun parseChatResponse(responseBody: String, model: String): ChatResult {
@@ -159,11 +161,13 @@ class LlmClient(private val apiConfig: ApiConfig) {
  * OkHttp 日志拦截器（debug用）
  */
 class HttpLoggingInterceptor : Interceptor {
+    private val tag = "LlmClient"
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        Log.d(TAG, "→ ${request.method} ${request.url}")
+        Log.d(tag, "→ ${request.method} ${request.url}")
         val response = chain.proceed(request)
-        Log.d(TAG, "← ${response.code} ${response.request.url}")
+        Log.d(tag, "← ${response.code} ${response.request.url}")
         return response
     }
 }

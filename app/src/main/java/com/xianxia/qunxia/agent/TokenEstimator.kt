@@ -37,7 +37,7 @@ object TokenEstimator {
         val dailyTokens: Long,
         val monthlyTokens: Long,
         val monthlyCostUsd: Double,
-        val monthlyCostCny: Double,      // 约合人民币
+        val monthlyCostCny: Double,
         val perDecisionTokens: Int,
         val breakdown: String
     )
@@ -53,10 +53,10 @@ object TokenEstimator {
     fun estimate(
         modelName: String,
         coreNpcCount: Int = 20,
-        decisionsPerDay: Int = 1,
+        decisionsPerDay: Double = 1.0,
         tokensPerDecision: Int = 1800
     ): Estimation {
-        val dailyDecisions = coreNpcCount * decisionsPerDay
+        val dailyDecisions = (coreNpcCount * decisionsPerDay).toInt()
         val dailyTokens = dailyDecisions.toLong() * tokensPerDecision
         val monthlyTokens = dailyTokens * 30
 
@@ -101,9 +101,9 @@ object TokenEstimator {
      */
     fun quickEstimateByMode(modelName: String, mode: GameMode): Estimation {
         return when (mode) {
-            GameMode.LEISURELY -> estimate(modelName, 10, 2, 1500)
-            GameMode.STANDARD -> estimate(modelName, 20, 1, 1800)
-            GameMode.LIVELY -> estimate(modelName, 30, 1, 2000)
+            GameMode.LEISURELY -> estimate(modelName, 10, 2.0, 1500)
+            GameMode.STANDARD -> estimate(modelName, 20, 1.0, 1800)
+            GameMode.LIVELY -> estimate(modelName, 30, 1.0, 2000)
             GameMode.EPIC -> estimate(modelName, 40, 1.5, 2200)
         }
     }

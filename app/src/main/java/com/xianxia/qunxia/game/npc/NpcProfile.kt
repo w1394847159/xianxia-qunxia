@@ -11,9 +11,7 @@ data class NpcProfile(
     val title: String,                  // 头衔，如"青云门掌门"
     val gender: String,
     val age: Int,
-    val realm: Realm,
-    val faction: String?,               // 所属宗门ID
-    val location: String,               // 当前位置
+    var realm: Realm,
 
     // 人设
     val personality: String,            // 性格描述，用于LLM system prompt

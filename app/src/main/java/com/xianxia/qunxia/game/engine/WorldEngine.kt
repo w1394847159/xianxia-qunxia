@@ -334,14 +334,14 @@ class WorldEngine(
         val events = listOf(
             GameEvent(
                 id = generateEventId(), gameDay = state.gameDay,
-                gameHour = state.gameHour, type = EventType.WORD_SECRET,
+                gameHour = state.gameHour, type = EventType.WORLD_SECRET,
                 title = "秘境传闻",
                 description = "修仙界传闻在某地发现了一处上古秘境，各派摩拳擦掌准备探索。",
                 importance = 3
             ),
             GameEvent(
                 id = generateEventId(), gameDay = state.gameDay,
-                gameHour = state.gameHour, type = EventType.WORD_TREASURE,
+                gameHour = state.gameHour, type = EventType.WORLD_TREASURE,
                 title = "天材地宝出世",
                 description = "有采药人在深山中发现了罕见的千年灵芝，消息走漏后引起多人争抢。",
                 importance = 2

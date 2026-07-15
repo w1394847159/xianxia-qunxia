@@ -9,7 +9,7 @@ data class GameEvent(
     val gameHour: Int,                      // 发生的游戏时辰
     val type: EventType,
     val title: String,                      // 事件标题
-    val description: String,                // 事件描述
+    var description: String,                // 事件描述
     val participants: List<String> = emptyList(),  // 参与者NPC ID
     val factionIds: List<String> = emptyList(),    // 相关宗门ID
     val location: String = "未知",           // 发生地点
