@@ -56,6 +56,30 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 }
             }
 
+            // Agent 监控（新增）
+            Card(
+                onClick = { 
+                    viewModel.refreshDecisionLogs()
+                    viewModel.navigateTo(Screen.AGENT_MONITOR) 
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("🧠 Agent 监控", style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            "查看每个NPC的决策状态，强制触发决策",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                    Text("→")
+                }
+            }
+
             // Token 统计
             Card(
                 onClick = { viewModel.navigateTo(Screen.TOKEN_STATS) },

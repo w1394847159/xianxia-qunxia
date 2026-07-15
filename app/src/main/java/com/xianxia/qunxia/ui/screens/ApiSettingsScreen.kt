@@ -72,9 +72,52 @@ fun ApiSettingsScreen(viewModel: MainViewModel) {
                 singleLine = true
             )
 
-            // 模型选择
+            // 模型选择（从 API 动态获取）
             Text("模型", style = MaterialTheme.typography.labelMedium)
+
+            // 获取模型列表按钮
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val isLoadingModels by viewModel.isLoadingModels.collectAsState()
+                val availableModels by viewModel.availableModels.collectAsState()
+
+                if (availableModels.isEmpty()) {
+                    Text(
+                        "点击「获取模型」从接口拉取列表",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                } else {
+                    Text(
+                        "共 ${availableModels.size} 个模型可用",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        val config = ApiConfig(baseUrl, apiKey, modelName, maxTokens, timeout)
+                        viewModel.updateApiConfig(config)
+                        viewModel.fetchAvailableModels()
+                    },
+                    enabled = !isLoadingModels && baseUrl.isNotBlank() && apiKey.isNotBlank(),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Text(
+                        if (isLoadingModels) "加载中..." else "获取模型",
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+
+            // 模型下拉选择
             var expanded by remember { mutableStateOf(false) }
+            val availableModels by viewModel.availableModels.collectAsState()
+            val modelOptions = availableModels.ifEmpty { listOf(modelName) }
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
@@ -92,20 +135,11 @@ fun ApiSettingsScreen(viewModel: MainViewModel) {
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    TokenEstimator.knownModels.forEach { model ->
+                    modelOptions.forEach { model ->
                         DropdownMenuItem(
-                            text = {
-                                Column {
-                                    Text(model.displayName)
-                                    Text(
-                                        "${model.provider} · 输入\$${model.pricePerInput}/M · 输出\$${model.pricePerOutput}/M",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.outline
-                                    )
-                                }
-                            },
+                            text = { Text(model) },
                             onClick = {
-                                modelName = model.name
+                                modelName = model
                                 expanded = false
                             }
                         )

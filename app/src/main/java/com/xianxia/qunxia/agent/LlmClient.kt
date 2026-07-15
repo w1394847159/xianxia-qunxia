@@ -111,6 +111,41 @@ class LlmClient(private val apiConfig: ApiConfig) {
         }
     }
 
+    /**
+     * 获取可用模型列表——从用户的 API 实时拉取
+     */
+    suspend fun fetchModels(): Result<List<String>> = withContext(Dispatchers.IO) {
+        try {
+            val url = "${apiConfig.baseUrl}/models"
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "Bearer ${apiConfig.apiKey}")
+                .get()
+                .build()
+
+            val response = client.newCall(request).execute()
+            val body = response.body?.string() ?: ""
+
+            if (!response.isSuccessful) {
+                return@withContext Result.failure(
+                    Exception("获取模型列表失败: ${response.code}")
+                )
+            }
+
+            val root = gson.fromJson(body, Map::class.java)
+            val data = root["data"] as? List<Map<String, Any>>
+            val models = data?.mapNotNull { it["id"] as? String } ?: emptyList()
+
+            if (models.isEmpty()) {
+                Result.failure(Exception("API 返回的模型列表为空"))
+            } else {
+                Result.success(models)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // ========== 内部方法 ==========
 
     private fun buildJsonRequestBody(

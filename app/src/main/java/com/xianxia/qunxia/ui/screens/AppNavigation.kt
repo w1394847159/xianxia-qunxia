@@ -37,6 +37,7 @@ fun AppNavigation(viewModel: MainViewModel = viewModel()) {
         Screen.API_SETTINGS -> ApiSettingsScreen(viewModel)
         Screen.TOKEN_STATS -> TokenStatsScreen(viewModel)
         Screen.SAVE_MANAGER -> SaveManagerScreen(viewModel)
+        Screen.AGENT_MONITOR -> AgentMonitorScreen(viewModel)
     }
 
     // 错误提示

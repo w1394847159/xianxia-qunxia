@@ -67,6 +67,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _estimation = MutableStateFlow<TokenEstimator.Estimation?>(null)
     val estimation: StateFlow<TokenEstimator.Estimation?> = _estimation.asStateFlow()
 
+    /** 可用模型列表（从用户 API 动态获取） */
+    private val _availableModels = MutableStateFlow<List<String>>(emptyList())
+    val availableModels: StateFlow<List<String>> = _availableModels.asStateFlow()
+
+    private val _isLoadingModels = MutableStateFlow(false)
+    val isLoadingModels: StateFlow<Boolean> = _isLoadingModels.asStateFlow()
+
+    /** NPC 决策日志 */
+    private val _decisionLogs = MutableStateFlow<List<NpcDecisionLog>>(emptyList())
+    val decisionLogs: StateFlow<List<NpcDecisionLog>> = _decisionLogs.asStateFlow()
+
     /** 消息/交互日志 */
     private val _messageLog = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messageLog: StateFlow<List<ChatMessage>> = _messageLog.asStateFlow()
@@ -266,6 +277,86 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * 获取可用模型列表（调用用户 API 的 /models 端点）
+     */
+    fun fetchAvailableModels() {
+        viewModelScope.launch {
+            _isLoadingModels.value = true
+            val config = _apiConfig.value
+            if (!config.isValid) {
+                _isLoadingModels.value = false
+                return@launch
+            }
+            val client = LlmClient(config)
+            val result = client.fetchModels()
+            result.onSuccess { models ->
+                _availableModels.value = models
+                // 如果当前模型不在列表中，自动选第一个
+                if (models.isNotEmpty() && models.none { it == _apiConfig.value.modelName }) {
+                    val newConfig = _apiConfig.value.copy(modelName = models.first())
+                    _apiConfig.value = newConfig
+                }
+            }.onFailure { e ->
+                _errorMessage.value = "获取模型列表失败: ${e.message}"
+            }
+            _isLoadingModels.value = false
+        }
+    }
+
+    /**
+     * 强制触发所有核心 NPC 决策一次（调试/验证用）
+     */
+    fun triggerAllNpcsDecision() {
+        viewModelScope.launch {
+            val state = worldEngine.worldState.value ?: return@launch
+            val logs = mutableListOf<NpcDecisionLog>()
+
+            for ((_, npc) in state.npcs) {
+                if (!npc.isCoreAgent || !npc.isAlive) continue
+                val event = worldEngine.triggerNpcDecision(npc.id)
+                logs.add(NpcDecisionLog(
+                    npcId = npc.id,
+                    npcName = npc.name,
+                    title = npc.title,
+                    realm = npc.realm.displayName,
+                    action = event?.title ?: npc.currentAction,
+                    description = event?.description ?: "暂无特别行动",
+                    location = npc.location
+                ))
+            }
+
+            _decisionLogs.value = logs
+            _messageLog.value += ChatMessage(
+                text = "🧠 已触发 ${logs.size} 个核心NPC决策，查看「Agent监控」了解结果",
+                isSystem = true
+            )
+        }
+    }
+
+    /**
+     * 获取单个 NPC 的决策日志
+     */
+    fun refreshDecisionLogs() {
+        viewModelScope.launch {
+            val state = worldEngine.worldState.value ?: return@launch
+            val logs = state.npcs.values
+                .filter { it.isCoreAgent }
+                .map { npc ->
+                    NpcDecisionLog(
+                        npcId = npc.id,
+                        npcName = npc.name,
+                        title = npc.title,
+                        realm = npc.realm.displayName,
+                        action = npc.currentAction,
+                        description = "上次决策: 第${npc.lastDecisionDay}天 · 累计${npc.totalDecisions}次",
+                        location = npc.location
+                    )
+                }
+            _decisionLogs.value = logs
+        }
+    }
+
+    /**
      * 更新游戏速度
      */
     fun updateTimeScale(scale: Float) {
@@ -320,6 +411,19 @@ data class ChatMessage(
     val timestamp: Long = System.currentTimeMillis()
 )
 
+/**
+ * NPC 决策日志 —— 用于 Agent 监控面板
+ */
+data class NpcDecisionLog(
+    val npcId: String,
+    val npcName: String,
+    val title: String,
+    val realm: String,
+    val action: String,
+    val description: String,
+    val location: String
+)
+
 enum class Screen {
     LOADING,
     NEW_GAME,
@@ -332,5 +436,6 @@ enum class Screen {
     SETTINGS,
     API_SETTINGS,
     TOKEN_STATS,
-    SAVE_MANAGER
+    SAVE_MANAGER,
+    AGENT_MONITOR
 }
