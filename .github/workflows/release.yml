@@ -3,7 +3,10 @@ name: Release APK
 on:
   push:
     tags:
-      - 'v*'  # 推送 v0.1.0、v1.2.3 等标签时触发
+      - 'v*'
+
+permissions:
+  contents: write
 
 jobs:
   release:
@@ -41,4 +44,3 @@ jobs:
           prerelease: false
           files: |
             app/build/outputs/apk/debug/*.apk
-          generate_release_notes: true
