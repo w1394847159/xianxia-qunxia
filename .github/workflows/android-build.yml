@@ -1,0 +1,99 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CI: true
+
+jobs:
+  # ─── Push 时：快速构建（确认能编译） ───
+  quick-build:
+    name: 快速构建 Debug APK
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: 设置 Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: 设置 Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 缓存 Android 构建缓存
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/build-cache
+          key: ${{ runner.os }}-android-${{ hashFiles('**/*.gradle.kts') }}
+
+      - name: 构建 Debug APK
+        run: ./gradlew assembleDebug --build-cache --parallel --configure-on-demand
+
+      - name: 上传 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: xianxia-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 7
+
+  # ─── PR 时：全量检查（Lint + Release 构建） ───
+  full-checks:
+    name: 完整检查 + Release 构建
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: 设置 Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: 设置 Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 缓存
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+
+      - name: 运行 Lint 检查
+        run: ./gradlew lint --build-cache --parallel
+        continue-on-error: true
+
+      - name: 构建 Release APK（含 ProGuard 混淆）
+        run: ./gradlew assembleRelease --build-cache --parallel --configure-on-demand
+
+      - name: 上传 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: xianxia-release-${{ github.sha }}
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: 上传 Lint 报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report-${{ github.sha }}
+          path: app/build/reports/lint-results-*.html
+          retention-days: 14
