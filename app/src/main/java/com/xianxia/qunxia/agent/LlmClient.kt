@@ -6,6 +6,8 @@ import com.xianxia.qunxia.settings.ApiConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * LLM API 客户端 —— 直接与用户配置的 API 交互
