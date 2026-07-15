@@ -131,15 +131,20 @@ class LlmClient(private val apiConfig: ApiConfig) {
     }
 
     private fun parseChatResponse(responseBody: String, model: String): ChatResult {
-        val json = gson.fromJson(responseBody, Map::class.java)
-        val choices = json["choices"] as? List<Map<String, Any>>
-        val firstChoice = choices?.firstOrNull()
-        val message = firstChoice?["message"] as? Map<String, Any>
-        val content = message?["content"] as? String ?: ""
+        val root = gson.fromJson(responseBody, Map::class.java)
+        if (root !is Map<*, *>) return ChatResult("", 0, 0, model)
 
-        val usage = json["usage"] as? Map<String, Any>
-        val promptTokens = (usage?["prompt_tokens"] as? Double)?.toInt() ?: 0
-        val completionTokens = (usage?["completion_tokens"] as? Double)?.toInt() ?: 0
+        val choicesRaw = root["choices"]
+        val firstChoice = if (choicesRaw is List<*>) choicesRaw.firstOrNull() else null
+        val messageRaw = if (firstChoice is Map<*, *>) firstChoice["message"] else null
+        val content = if (messageRaw is Map<*, *>) {
+            (messageRaw["content"] as? String) ?: ""
+        } else ""
+
+        val usageRaw = root["usage"]
+        val usage = if (usageRaw is Map<*, *>) usageRaw else null
+        val promptTokens = (usage?.get("prompt_tokens") as? Number)?.toInt() ?: 0
+        val completionTokens = (usage?.get("completion_tokens") as? Number)?.toInt() ?: 0
 
         return ChatResult(
             content = content,
