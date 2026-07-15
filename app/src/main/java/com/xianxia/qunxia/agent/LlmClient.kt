@@ -6,8 +6,6 @@ import com.xianxia.qunxia.settings.ApiConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * LLM API 客户端 —— 直接与用户配置的 API 交互
@@ -128,7 +126,8 @@ class LlmClient(private val apiConfig: ApiConfig) {
             "response_format" to mapOf("type" to "json_object")
         )
         val json = gson.toJson(jsonObj)
-        return json.toRequestBody("application/json".toMediaTypeOrNull())
+        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        return RequestBody.create(mediaType, json)
     }
 
     private fun parseChatResponse(responseBody: String, model: String): ChatResult {
