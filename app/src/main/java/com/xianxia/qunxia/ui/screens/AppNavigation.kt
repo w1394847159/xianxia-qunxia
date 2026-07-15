@@ -1,8 +1,17 @@
 package com.xianxia.qunxia.ui.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.xianxia.qunxia.MainViewModel
 import com.xianxia.qunxia.Screen
@@ -32,13 +41,13 @@ fun AppNavigation(viewModel: MainViewModel = viewModel()) {
 
     // 错误提示
     errorMessage?.let { msg ->
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { viewModel.clearError() },
-            title = { androidx.compose.material3.Text("错误") },
-            text = { androidx.compose.material3.Text(msg) },
+            title = { Text("错误") },
+            text = { Text(msg) },
             confirmButton = {
-                androidx.compose.material3.TextButton(onClick = { viewModel.clearError() }) {
-                    androidx.compose.material3.Text("确定")
+                TextButton(onClick = { viewModel.clearError() }) {
+                    Text("确定")
                 }
             }
         )
@@ -47,17 +56,14 @@ fun AppNavigation(viewModel: MainViewModel = viewModel()) {
 
 @Composable
 fun LoadingScreen() {
-    androidx.compose.foundation.layout.Box(
-        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
-        contentAlignment = androidx.compose.ui.Alignment.Center
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        androidx.compose.material3.Text(
+        Text(
             text = "修仙群侠传\n载入中...",
-            style = androidx.compose.material3.MaterialTheme.typography.headlineLarge,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            style = MaterialTheme.typography.headlineLarge,
+            textAlign = TextAlign.Center
         )
     }
 }
-
-private fun androidx.compose.ui.Modifier.fillMaxSize() =
-    this.then(androidx.compose.foundation.layout.Modifier.fillMaxSize())
