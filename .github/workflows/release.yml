@@ -28,6 +28,21 @@ jobs:
       - name: 设置 Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: 缓存并生成 debug 签名密钥
+        id: debug-key
+        uses: actions/cache@v4
+        with:
+          path: ci-debug.keystore
+          key: ci-debug-keystore-v1
+
+      - name: 生成 debug 签名密钥（首次运行）
+        if: steps.debug-key.outputs.cache-hit != 'true'
+        run: |
+          keytool -genkey -v -keystore ci-debug.keystore \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 \
+            -validity 10000 -storepass android -keypass android \
+            -dname 'CN=Android Debug, O=Android, C=US'
+
       - name: 构建 Debug APK（已签名，可直接安装）
         run: ./gradlew assembleDebug --build-cache --parallel --configure-on-demand
 

@@ -18,6 +18,10 @@ local.properties
 # Gradle wrapper jar 必须跟踪（CI/CD 需要）
 !gradle/wrapper/gradle-wrapper.jar
 
+# 签名文件（CI 缓存生成，不提交）
+*.keystore
+*.jks
+
 # IDE
 .vscode/
 *.swp
